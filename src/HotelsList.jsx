@@ -196,9 +196,11 @@ function mergeHotels(hotels1, hotels2, hotels3) {
       details: hotel3.details,
       Facilities: Array.from(
         new Set([
-          ...(hotel1.Facilities || []),
+          ...(hotel1.Facilities?.map((item) =>
+            capitalizeFirstLetter(item.toLowerCase().replace(/\s+/g, ""))
+          ) || []),
           ...(hotel3.amenities?.general.map((item) =>
-            capitalizeFirstLetter(item)
+            capitalizeFirstLetter(item.toLowerCase().replace(/\s+/g, ""))
           ) || []),
         ])
       ),
@@ -214,14 +216,24 @@ function mergeHotels(hotels1, hotels2, hotels3) {
         Rooms: [
           ...(hotel2.images?.rooms || []),
           ...(hotel3.images?.rooms || []),
-        ].map((img) => ({
-          url: img.url || img.link,
-          description: img.description || img.caption,
-        })),
-        Site: [...(hotel3.images?.site || [])].map((img) => ({
-          url: img.link,
-          description: img.caption,
-        })),
+        ]
+          .map((img) => ({
+            url: img.url || img.link,
+            description: img.description || img.caption,
+          }))
+          .filter(
+            (item, index, self) =>
+              self.findIndex((i) => i.url === item.url) === index
+          ),
+        Site: [...(hotel3.images?.site || [])]
+          .map((img) => ({
+            url: img.link,
+            description: img.caption,
+          }))
+          .filter(
+            (item, index, self) =>
+              self.findIndex((i) => i.url === item.url) === index
+          ),
       },
       BookingConditions: hotel3.booking_conditions || [],
     };
